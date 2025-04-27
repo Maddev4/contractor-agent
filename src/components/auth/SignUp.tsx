@@ -38,7 +38,7 @@ export default function SignUp() {
         const profile = await getUserProfile();
         setProfile(profile);
       }
-      router.push("/");
+      router.push("/auth/signin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

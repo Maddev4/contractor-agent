@@ -8,6 +8,8 @@ import SignIn from "@/components/auth/SignIn";
 export default function SignInPage() {
   const [session] = useAtom(sessionAtom);
 
+  console.log(session);
+
   if (session) {
     return (
       <div className="text-center">

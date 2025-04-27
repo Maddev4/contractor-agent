@@ -30,7 +30,7 @@ export default function SignIn() {
       setAtomSession(data.session);
       const profile = await getUserProfile();
       setAtomProfile(profile);
-      router.push("/");
+      router.push("/profile");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
