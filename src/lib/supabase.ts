@@ -107,7 +107,12 @@ export const createAgent = async (agent: Agent) => {
 };
 
 export const updateAgent = async (agent: Agent) => {
-  const { data, error } = await supabase.from("agents").upsert(agent);
+  const { data, error } = await supabase
+    .from("agents")
+    .upsert(agent, {
+      onConflict: 'phone_number',
+      ignoreDuplicates: false
+    });
   if (error) throw error;
   return data;
 };

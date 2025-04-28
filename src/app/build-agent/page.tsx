@@ -6,11 +6,13 @@ import { sessionAtom, profileAtom } from "@/lib/atom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { createAgent } from "@/lib/supabase";
+import { updateAgent } from "@/lib/supabase";
 import { Agent } from "@/types/Agent";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { useRouter } from "next/navigation";
 
 export default function BuildAgentPage() {
+  const router = useRouter();
   const session = useAtomValue(sessionAtom);
   const profile = useAtomValue(profileAtom);
   const [questions, setQuestions] = useState<string[]>([]);
@@ -35,15 +37,31 @@ export default function BuildAgentPage() {
   const handleCreateAgent = async () => {
     setIsLoading(true);
     try {
+      const agentResponse = await fetch('/api/agents', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ questions })
+      });
+
+      if (!agentResponse.ok) {
+        throw new Error("Failed to create agent")
+      }
+
+      const agentData = await agentResponse.json();
       const agent: Agent = {
         user_id: session.user.id,
         phone_number: profile.agent?.phone_number || "",
-        twilio_phone_number: profile.agent?.twilio_phone_number || "",
-        llm_id: profile.agent?.llm_id || "default",
-        retell_id: profile.agent?.retell_id || "default",
+        twilio_phone_number: agentData.phone_number || "",
+        llm_id: agentData.llm_id,
+        retell_id: agentData.agent_id,
         questions,
       };
-      await createAgent(agent);
+      await updateAgent(agent);
+
+      router.push('/');
+
       // Handle success (e.g., show success message, redirect, etc.)
     } catch (error) {
       console.error("Failed to create agent:", error);
