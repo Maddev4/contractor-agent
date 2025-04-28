@@ -35,7 +35,7 @@ export default function SignUp() {
       const session = await signUpWithEmail(email, password);
       if (session) {
         setSession(session);
-        const profile = await getUserProfile();
+        const profile = await getUserProfile(email);
         setProfile(profile);
       }
       router.push("/auth/signin");

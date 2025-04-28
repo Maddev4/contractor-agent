@@ -36,8 +36,8 @@ export const signOut = async () => {
 export const checkSession = async () => {
   const session = await getSession();
   if (!session) return null;
-
-  const profile = await getUserProfile();
+  if (!session.user.email) return null;
+  const profile = await getUserProfile(session.user.email);
   return { session, profile };
 };
 
@@ -59,10 +59,11 @@ export const getSession = async () => {
   return session;
 };
 
-export const getUserProfile = async () => {
+export const getUserProfile = async (email: string) => {
   const { data: profile, error } = await supabase
     .from("users")
     .select("*")
+    .eq("email", email)
     .single();
   if (error) throw error;
 
@@ -75,7 +76,6 @@ export const getUserProfile = async () => {
   if (agent.length) {
     profile.agent = agent[0];
   }
-  console.log(profile);
   return profile;
 };
 

@@ -28,7 +28,7 @@ export default function SignIn() {
       const { data, error } = await signInWithEmail(email, password);
       if (error) throw error;
       setAtomSession(data.session);
-      const profile = await getUserProfile();
+      const profile = await getUserProfile(email);
       setAtomProfile(profile);
       router.push("/profile");
     } catch (err) {
