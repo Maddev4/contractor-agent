@@ -1,23 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAtomValue } from "jotai";
 import { sessionAtom, profileAtom } from "@/lib/atom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { updateAgent } from "@/lib/supabase";
-import { Agent } from "@/types/Agent";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
+import { CheckCircle, XCircle } from "lucide-react";
 
 export default function BuildAgentPage() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const session = useAtomValue(sessionAtom);
   const profile = useAtomValue(profileAtom);
   const [questions, setQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<
+    "success" | "canceled" | null
+  >(null);
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const canceled = searchParams.get("canceled");
+    const questionsParam = searchParams.get("questions");
+
+    if (success === "true") {
+      setPaymentStatus("success");
+      if (questionsParam) {
+        setQuestions(JSON.parse(decodeURIComponent(questionsParam)));
+      }
+    } else if (canceled === "true") {
+      setPaymentStatus("canceled");
+    }
+  }, [searchParams]);
 
   if (!session || !profile) {
     return null;
@@ -37,32 +55,24 @@ export default function BuildAgentPage() {
   const handleCreateAgent = async () => {
     setIsLoading(true);
     try {
-      const agentResponse = await fetch('/api/agents', {
+      const checkoutResponse = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ questions })
+        body: JSON.stringify({
+          questions,
+          user_id: session.user.id,
+          phone_number: profile.agent?.phone_number || "",
+        }),
       });
 
-      if (!agentResponse.ok) {
-        throw new Error("Failed to create agent")
+      if (!checkoutResponse.ok) {
+        throw new Error("Failed to create checkout session");
       }
 
-      const agentData = await agentResponse.json();
-      const agent: Agent = {
-        user_id: session.user.id,
-        phone_number: profile.agent?.phone_number || "",
-        twilio_phone_number: agentData.phone_number || "",
-        llm_id: agentData.llm_id,
-        retell_id: agentData.agent_id,
-        questions,
-      };
-      await updateAgent(agent);
-
-      router.push('/');
-
-      // Handle success (e.g., show success message, redirect, etc.)
+      const { url } = await checkoutResponse.json();
+      window.location.href = url;
     } catch (error) {
       console.error("Failed to create agent:", error);
       // Handle error (e.g., show error message)
@@ -79,6 +89,24 @@ export default function BuildAgentPage() {
             <CardTitle>Build Your Agent</CardTitle>
           </CardHeader>
           <CardContent>
+            {paymentStatus === "success" && (
+              <Alert className="mb-4">
+                <CheckCircle className="h-4 w-4" />
+                <AlertTitle>Payment Successful!</AlertTitle>
+                <AlertDescription>
+                  Your agent is being created. This may take a few moments.
+                </AlertDescription>
+              </Alert>
+            )}
+            {paymentStatus === "canceled" && (
+              <Alert variant="destructive" className="mb-4">
+                <XCircle className="h-4 w-4" />
+                <AlertTitle>Payment Canceled</AlertTitle>
+                <AlertDescription>
+                  Your payment was canceled. You can try again.
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="question">Add a Question</Label>
@@ -121,7 +149,7 @@ export default function BuildAgentPage() {
                 disabled={questions.length === 0 || isLoading}
                 className="w-full"
               >
-                {isLoading ? "Creating..." : "Create Agent"}
+                {isLoading ? "Processing..." : "Create Agent ($99)"}
               </Button>
             </div>
           </CardContent>
