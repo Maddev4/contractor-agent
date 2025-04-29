@@ -80,12 +80,19 @@ export const getUserProfile = async (email: string) => {
 };
 
 export const updateUserProfile = async (profile: Profile) => {
-  const { data: updatedProfile, error } = await supabase
-    .from("users")
-    .upsert(profile, {
+  const { data: updatedProfile, error } = await supabase.from("users").upsert(
+    {
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      plan: profile.plan,
+      avatar: profile.avatar,
+    },
+    {
       onConflict: "email",
       ignoreDuplicates: false,
-    });
+    }
+  );
   if (error) throw error;
   return updatedProfile;
 };
