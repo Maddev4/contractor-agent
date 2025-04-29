@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { CheckCircle, XCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, updateUserProfile } from "@/lib/supabase";
 import { Agent } from "@/types/Agent";
 
 export default function BuildAgentPage() {
@@ -38,6 +38,13 @@ export default function BuildAgentPage() {
       if (questionsParam) {
         setQuestions(JSON.parse(decodeURIComponent(questionsParam)));
       }
+      updateUserProfile({
+        id: profile?.id || "",
+        email: profile?.email || "",
+        name: profile?.name || "",
+        avatar: profile?.avatar || "",
+        plan: "PAID",
+      });
       // After successful payment, the webhook will be called automatically by Stripe
       // No need to manually call it from the client side
     } else if (canceled === "true") {
@@ -48,26 +55,27 @@ export default function BuildAgentPage() {
   useEffect(() => {
     const channel = supabase.channel("public:messages");
 
-    channel.on(
-      "postgres_changes", 
-      { 
-        event: "UPDATE", 
-        schema: "public", 
-        table: "agents", 
-        filter: `user_id=eq.${session?.user.id}`
-      },
-      (payload) => {
-        console.log("Agent updated:", payload);
-        setAgent(payload.new as Agent);
-        setIsCreatingAgent(false);
-      }
-    )
-    .subscribe()
+    channel
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "agents",
+          filter: `user_id=eq.${session?.user.id}`,
+        },
+        (payload) => {
+          console.log("Agent updated:", payload);
+          setAgent(payload.new as Agent);
+          setIsCreatingAgent(false);
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
-    }
-  }, [session?.user.id, router])
+    };
+  }, [session?.user.id, router]);
 
   if (!session || !profile) {
     return null;
@@ -126,11 +134,11 @@ export default function BuildAgentPage() {
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Payment Successful!</AlertTitle>
                 <AlertDescription>
-                {isCreatingAgent && !agent
-                  ? "Creating your agent... Please wait..."
-                  : agent
-                  ? "Your agent is ready! Reviewing details..."
-                  : "Agent creation complete!"}
+                  {isCreatingAgent && !agent
+                    ? "Creating your agent... Please wait..."
+                    : agent
+                    ? "Your agent is ready! Reviewing details..."
+                    : "Agent creation complete!"}
                 </AlertDescription>
               </Alert>
             )}
@@ -149,21 +157,23 @@ export default function BuildAgentPage() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="text-gray-600">Phone Number:</div>
                   <div>{agent.phone_number}</div>
-                  
+
                   <div className="text-gray-600">Twilio Number:</div>
                   <div>{agent.twilio_phone_number}</div>
-                  
+
                   <div className="text-gray-600">LLM ID:</div>
                   <div className="truncate">{agent.llm_id}</div>
-                  
+
                   <div className="text-gray-600">Retell ID:</div>
                   <div className="truncate">{agent.retell_id}</div>
-                  
+
                   <div className="text-gray-600">Questions:</div>
                   <div>
                     <ul className="list-disc list-inside">
                       {agent.questions.map((q, i) => (
-                        <li key={i} className="truncate">{q}</li>
+                        <li key={i} className="truncate">
+                          {q}
+                        </li>
                       ))}
                     </ul>
                   </div>

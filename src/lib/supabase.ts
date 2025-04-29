@@ -82,7 +82,10 @@ export const getUserProfile = async (email: string) => {
 export const updateUserProfile = async (profile: Profile) => {
   const { data: updatedProfile, error } = await supabase
     .from("users")
-    .upsert(profile);
+    .upsert(profile, {
+      onConflict: "email",
+      ignoreDuplicates: false,
+    });
   if (error) throw error;
   return updatedProfile;
 };
@@ -107,12 +110,10 @@ export const createAgent = async (agent: Agent) => {
 };
 
 export const updateAgent = async (agent: Agent) => {
-  const { data, error } = await supabase
-    .from("agents")
-    .upsert(agent, {
-      onConflict: 'phone_number',
-      ignoreDuplicates: false
-    });
+  const { data, error } = await supabase.from("agents").upsert(agent, {
+    onConflict: "phone_number",
+    ignoreDuplicates: false,
+  });
   if (error) throw error;
   return data;
 };
