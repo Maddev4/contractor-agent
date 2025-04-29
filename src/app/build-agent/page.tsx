@@ -20,6 +20,7 @@ export default function BuildAgentPage() {
   const [questions, setQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<
     "success" | "canceled" | null
   >(null);
@@ -31,6 +32,7 @@ export default function BuildAgentPage() {
 
     if (success === "true") {
       setPaymentStatus("success");
+      setIsCreatingAgent(true);
       if (questionsParam) {
         setQuestions(JSON.parse(decodeURIComponent(questionsParam)));
       }
@@ -44,14 +46,24 @@ export default function BuildAgentPage() {
   useEffect(() => {
     const channel = supabase.channel("public:messages");
 
-    channel.on("postgres_changes", { event: "*", schema: "public", table: "messages" }, (payload) => {
-      console.log(payload);
-    })
+    channel.on(
+      "postgres_changes", 
+      { 
+        event: "UPDATE", 
+        schema: "public", 
+        table: "agents", 
+        filter: `user_id=eq.${session?.user.id}`
+      },
+      (payload) => {
+        console.log("New agent created: ", payload);
+      }
+    )
+    .subscribe()
 
     return () => {
       supabase.removeChannel(channel);
     }
-  }, [])
+  }, [session?.user.id, router])
 
   if (!session || !profile) {
     return null;
@@ -110,8 +122,9 @@ export default function BuildAgentPage() {
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Payment Successful!</AlertTitle>
                 <AlertDescription>
-                  Your agent is being created. You will be redirected to the
-                  home page in a few seconds...
+                  {isCreatingAgent 
+                    ? "Creating your agent... Please wait..."
+                    : "Your agent is ready! Redirecting to home page..."}
                 </AlertDescription>
               </Alert>
             )}
