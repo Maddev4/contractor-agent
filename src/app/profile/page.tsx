@@ -41,6 +41,7 @@ export default function ProfilePage() {
       email: profile.email,
       name: profile.name,
       avatar: profile.avatar,
+      plan: profile.plan,
       agent,
     });
     setIsEditing(false);

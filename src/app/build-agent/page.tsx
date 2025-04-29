@@ -50,7 +50,7 @@ export default function BuildAgentPage() {
     } else if (canceled === "true") {
       setPaymentStatus("canceled");
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, profile]);
 
   useEffect(() => {
     const channel = supabase.channel("public:messages");
