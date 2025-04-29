@@ -8,6 +8,8 @@ export async function POST(request: Request) {
   try {
     const { questions, user_id, phone_number } = await request.json();
 
+    console.log(typeof questions);
+
     // Generate the prompt using OpenAI
     const general_prompt = await generatePrompt(questions);
 
