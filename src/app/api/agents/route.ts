@@ -6,7 +6,13 @@ import { Agent } from "@/types/Agent";
 
 export async function POST(request: Request) {
   try {
-    const { questions, user_id, phone_number } = await request.json();
+    const {
+      questions: strQuestions,
+      user_id,
+      phone_number,
+    } = await request.json();
+
+    const questions = JSON.parse(strQuestions);
 
     console.log(typeof questions);
 
