@@ -28,10 +28,23 @@ export async function POST(request: Request) {
       case "checkout.session.completed":
         const session = event.data.object as Stripe.Checkout.Session;
         // Handle successful payment
-        console.log("Payment successful for session:", session.id);
+        // console.log("Payment successful for session:", session.id);
         // Access your metadata
-        // const questions = session.metadata?.questions;
-        // const userId = session.metadata?.user_id;
+        const user_id = session.metadata?.user_id;
+        const questions = session.metadata?.questions;
+        const phone_number = session.metadata?.phone_number;
+
+        console.log("User ID:", user_id);
+        console.log("Questions:", questions);
+
+        fetch("/api/agents", {
+          method: "POST",
+          body: JSON.stringify({
+            questions,
+            user_id,
+            phone_number,
+          }),
+        });
 
         // TODO: Implement your post-payment logic here
         // For example: Create the agent, send confirmation emails, etc.

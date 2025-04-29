@@ -6,7 +6,7 @@ import { Agent } from "@/types/Agent";
 
 export async function POST(request: Request) {
   try {
-    const { questions, userId, phoneNumber } = await request.json();
+    const { questions, user_id, phone_number } = await request.json();
 
     // Generate the prompt using OpenAI
     const general_prompt = await generatePrompt(questions);
@@ -143,8 +143,8 @@ export async function POST(request: Request) {
 
     // Create agent in database
     const agent: Agent = {
-      user_id: userId,
-      phone_number: phoneNumber || "",
+      user_id,
+      phone_number,
       twilio_phone_number: phoneResponse.phone_number,
       llm_id: llmResponse.llm_id,
       retell_id: agentResponse.agent_id,
