@@ -1,7 +1,7 @@
 import { generatePrompt } from "@/lib/openai";
 import { fetchApi } from "@/lib/utils";
 import { NextResponse } from "next/server";
-import { createAgent } from "@/lib/supabase";
+import { updateAgent } from "@/lib/supabase";
 import { Agent } from "@/types/Agent";
 
 export async function POST(request: Request) {
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
       questions,
     };
 
-    await createAgent(agent);
+    await updateAgent(agent);
 
     return NextResponse.json({
       success: true,
