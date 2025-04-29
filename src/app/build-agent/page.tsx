@@ -11,12 +11,14 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { Agent } from "@/types/Agent";
 
 export default function BuildAgentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const session = useAtomValue(sessionAtom);
   const profile = useAtomValue(profileAtom);
+  const [agent, setAgent] = useState<Agent | null>(null);
   const [questions, setQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +57,9 @@ export default function BuildAgentPage() {
         filter: `user_id=eq.${session?.user.id}`
       },
       (payload) => {
-        console.log("New agent created: ", payload);
+        console.log("Agent updated:", payload);
+        setAgent(payload.new as Agent);
+        setIsCreatingAgent(false);
       }
     )
     .subscribe()
@@ -122,9 +126,11 @@ export default function BuildAgentPage() {
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Payment Successful!</AlertTitle>
                 <AlertDescription>
-                  {isCreatingAgent 
-                    ? "Creating your agent... Please wait..."
-                    : "Your agent is ready! Redirecting to home page..."}
+                {isCreatingAgent && !agent
+                  ? "Creating your agent... Please wait..."
+                  : agent
+                  ? "Your agent is ready! Reviewing details..."
+                  : "Agent creation complete!"}
                 </AlertDescription>
               </Alert>
             )}
@@ -136,6 +142,36 @@ export default function BuildAgentPage() {
                   Your payment was canceled. You can try again.
                 </AlertDescription>
               </Alert>
+            )}
+            {paymentStatus === "success" && agent && (
+              <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium">Agent Details:</h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-gray-600">Phone Number:</div>
+                  <div>{agent.phone_number}</div>
+                  
+                  <div className="text-gray-600">Twilio Number:</div>
+                  <div>{agent.twilio_phone_number}</div>
+                  
+                  <div className="text-gray-600">LLM ID:</div>
+                  <div className="truncate">{agent.llm_id}</div>
+                  
+                  <div className="text-gray-600">Retell ID:</div>
+                  <div className="truncate">{agent.retell_id}</div>
+                  
+                  <div className="text-gray-600">Questions:</div>
+                  <div>
+                    <ul className="list-disc list-inside">
+                      {agent.questions.map((q, i) => (
+                        <li key={i} className="truncate">{q}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">
+                  Redirecting to home page in 3 seconds...
+                </p>
+              </div>
             )}
             <div className="space-y-6">
               <div className="space-y-2">
