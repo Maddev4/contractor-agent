@@ -36,15 +36,20 @@ export async function POST(request: Request) {
 
         console.log("User ID:", user_id);
         console.log("Questions:", questions);
+        console.log("Phone Number:", phone_number);
 
-        fetch("/api/agents", {
-          method: "POST",
-          body: JSON.stringify({
-            questions,
-            user_id,
-            phone_number,
-          }),
-        });
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/agents`, {
+            method: "POST",
+            body: JSON.stringify({
+              questions,
+              user_id,
+              phone_number,
+            }),
+          });
+        } catch (error) {
+          console.error("Error creating agent:", error);
+        }
 
         // TODO: Implement your post-payment logic here
         // For example: Create the agent, send confirmation emails, etc.
