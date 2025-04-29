@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { CheckCircle, XCircle } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function BuildAgentPage() {
   const router = useRouter();
@@ -39,6 +40,18 @@ export default function BuildAgentPage() {
       setPaymentStatus("canceled");
     }
   }, [searchParams, router]);
+
+  useEffect(() => {
+    const channel = supabase.channel("public:messages");
+
+    channel.on("postgres_changes", { event: "*", schema: "public", table: "messages" }, (payload) => {
+      console.log(payload);
+    })
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+  }, [])
 
   if (!session || !profile) {
     return null;

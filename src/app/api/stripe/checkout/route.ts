@@ -5,8 +5,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
 });
 
-console.log(process.env.STRIPE_WEBHOOK_SECRET);
-
 export async function POST(request: Request) {
   try {
     const { questions, user_id, phone_number } = await request.json();
