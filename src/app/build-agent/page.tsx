@@ -216,7 +216,7 @@ export default function BuildAgentPage() {
                 </div>
               </div>
             )}
-            {isCreatingAgent && !agent && (
+            {isCreatingAgent && (
               <Loading text="Creating your AI agent... This may take a few moments." />
             )}
             {paymentStatus === "success" && (
