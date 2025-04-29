@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { CheckCircle, XCircle } from "lucide-react";
 
 export default function BuildAgentPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const session = useAtomValue(sessionAtom);
   const profile = useAtomValue(profileAtom);
@@ -32,10 +33,12 @@ export default function BuildAgentPage() {
       if (questionsParam) {
         setQuestions(JSON.parse(decodeURIComponent(questionsParam)));
       }
+      // After successful payment, the webhook will be called automatically by Stripe
+      // No need to manually call it from the client side
     } else if (canceled === "true") {
       setPaymentStatus("canceled");
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   if (!session || !profile) {
     return null;
@@ -94,7 +97,8 @@ export default function BuildAgentPage() {
                 <CheckCircle className="h-4 w-4" />
                 <AlertTitle>Payment Successful!</AlertTitle>
                 <AlertDescription>
-                  Your agent is being created. This may take a few moments.
+                  Your agent is being created. You will be redirected to the
+                  home page in a few seconds...
                 </AlertDescription>
               </Alert>
             )}
