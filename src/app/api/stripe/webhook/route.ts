@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         console.log("Phone Number:", phone_number);
 
         try {
-          await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/agents`, {
+          await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/agents`, {
             method: "POST",
             body: JSON.stringify({
               questions,
