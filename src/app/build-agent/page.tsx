@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { CheckCircle, XCircle } from "lucide-react";
-import { supabase, updateUserProfile, getUserProfile } from "@/lib/supabase";
+import { supabase, updateUserProfile } from "@/lib/supabase";
 import { Agent } from "@/types/Agent";
 
 export default function BuildAgentPage() {
@@ -61,7 +61,7 @@ export default function BuildAgentPage() {
     };
   
     fetchExistingAgent();
-  })
+  }, [profile])
 
   useEffect(() => {
     const channel = supabase.channel("public:messages");
