@@ -6,11 +6,12 @@ import { sessionAtom, profileAtom } from "@/lib/atom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { Loading } from "@/components/ui/Loading";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/Alert";
 import { CheckCircle, XCircle } from "lucide-react";
-import { supabase, updateUserProfile } from "@/lib/supabase";
+import { supabase, updateUserProfile, getUserProfile } from "@/lib/supabase";
 import { Agent } from "@/types/Agent";
 
 export default function BuildAgentPage() {
@@ -51,6 +52,16 @@ export default function BuildAgentPage() {
       setPaymentStatus("canceled");
     }
   }, [searchParams, router, profile]);
+
+  useEffect(() => {
+    const fetchExistingAgent = async () => {
+      if (profile?.agent) {
+        setAgent(profile.agent);
+      }
+    };
+  
+    fetchExistingAgent();
+  })
 
   useEffect(() => {
     const channel = supabase.channel("public:messages");
@@ -126,9 +137,88 @@ export default function BuildAgentPage() {
       <div className="max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Build Your Agent</CardTitle>
+            <CardTitle>{agent ? "Your Agent Details" : "Build Your Agent"}</CardTitle>
           </CardHeader>
           <CardContent>
+            {agent && !isCreatingAgent && (
+              <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-medium">Agent Details:</h3>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="text-gray-600">Phone Number:</div>
+                  <div>{agent.phone_number}</div>
+
+                  <div className="text-gray-600">Twilio Number:</div>
+                  <div>{agent.twilio_phone_number}</div>
+
+                  <div className="text-gray-600">LLM ID:</div>
+                  <div className="truncate">{agent.llm_id}</div>
+
+                  <div className="text-gray-600">Retell ID:</div>
+                  <div className="truncate">{agent.retell_id}</div>
+
+                  <div className="text-gray-600">Questions:</div>
+                  <div>
+                    <ul className="list-disc list-inside">
+                      {agent.questions.map((q, i) => (
+                        <li key={i} className="truncate">
+                          {q}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!agent && !isCreatingAgent && (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="question">Add a Question</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="question"
+                      value={newQuestion}
+                      onChange={(e) => setNewQuestion(e.target.value)}
+                      placeholder="Enter a question for your agent"
+                    />
+                    <Button onClick={handleAddQuestion}>Add</Button>
+                  </div>
+                </div>
+
+                {questions.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Added Questions</Label>
+                    <div className="space-y-2">
+                      {questions.map((question, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        >
+                          <span>{question}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveQuestion(index)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleCreateAgent}
+                  disabled={questions.length === 0 || isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? "Processing..." : "Create Agent ($99)"}
+                </Button>
+              </div>
+            )}
+            {isCreatingAgent && !agent && (
+              <Loading text="Creating your AI agent... This may take a few moments." />
+            )}
             {paymentStatus === "success" && (
               <Alert className="mb-4">
                 <CheckCircle className="h-4 w-4" />
@@ -151,7 +241,7 @@ export default function BuildAgentPage() {
                 </AlertDescription>
               </Alert>
             )}
-            {paymentStatus === "success" && agent && (
+            {/* {paymentStatus === "success" && agent && (
               <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
                 <h3 className="font-medium">Agent Details:</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -182,52 +272,8 @@ export default function BuildAgentPage() {
                   Redirecting to home page in 3 seconds...
                 </p>
               </div>
-            )}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="question">Add a Question</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="question"
-                    value={newQuestion}
-                    onChange={(e) => setNewQuestion(e.target.value)}
-                    placeholder="Enter a question for your agent"
-                  />
-                  <Button onClick={handleAddQuestion}>Add</Button>
-                </div>
-              </div>
+            )} */}
 
-              {questions.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Added Questions</Label>
-                  <div className="space-y-2">
-                    {questions.map((question, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                      >
-                        <span>{question}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveQuestion(index)}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <Button
-                onClick={handleCreateAgent}
-                disabled={questions.length === 0 || isLoading}
-                className="w-full"
-              >
-                {isLoading ? "Processing..." : "Create Agent ($99)"}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       </div>
